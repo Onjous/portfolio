@@ -13,57 +13,63 @@ npm run build    # build produkcyjny
 npm run start    # serwer produkcyjny
 ```
 
-## Edycja treści — jeden plik
+## Edycja treści
 
-Wszystko, co edytowalne, jest w **`src/config/site.ts`**:
-
-| Pole | Co robi |
+| Plik | Co zawiera |
 | --- | --- |
-| `site.email` | Adres e-mail. **Puste = brak linku w sekcji kontaktu.** Uzupełnij przed publikacją. |
-| `site.socials` | Lista `{ label, href }`. Pusta = nic się nie wyświetla. |
-| `projects[]` | Dane projektów: nazwa, kategoria, koncept, kierunek, paleta, ekrany. |
-| `projects[].liveUrl` | Link do wersji live. Puste = „Wersja live — wkrótce” (bez martwego linku). |
-| `projects[].cover.src` | Zrzut ekranu okładki, np. `/projects/brut/cover.jpg`. |
-| `projects[].screens[].src` | Zrzuty ekranów na podstronie projektu (`kind: "desktop"` lub `"mobile"`). |
+| **`src/config/site.ts`** | E-mail, GitHub, projekty (PL + EN), linki live, zrzuty ekranu. |
+| **`src/i18n/dictionary.ts`** | Wszystkie teksty interfejsu w obu językach (EN jest typowany względem PL — brakujący klucz = błąd builda). |
 
-### Podmiana wizualizacji tymczasowych na zrzuty ekranu
+### Języki i adresy
 
-Dopóki projekt nie ma `src`, strona pokazuje abstrakcyjną kompozycję SVG oznaczoną
-etykietą **„Wizualizacja tymczasowa”** / **„Miejsce na zrzut ekranu”**. To nie są fałszywe screenshoty.
+Polski jest domyślny (bez prefiksu), angielski pod `/en`:
 
-1. Wrzuć pliki do `public/projects/<slug>/` (zalecane: JPG/WebP, okładka 2400×1500, ekrany desktop 2400×1500, mobile 1080×1920).
-2. Ustaw ścieżki w `site.ts`, np. `cover: { src: "/projects/brut/cover.jpg", alt: "…" }`.
-3. Obrazy są automatycznie optymalizowane przez `next/image`; etykiety placeholderów znikają.
+| Strona | PL | EN |
+| --- | --- | --- |
+| Główna | `/` | `/en` |
+| Case study | `/projekty/brut` | `/en/projects/brut` |
+
+Wszystkie trasy żyją wewnętrznie w `app/[lang]`; `src/proxy.ts` mapuje publiczne adresy na `/pl/…` / `/en/…`,
+przekierowuje `/pl/…` na wersję bez prefiksu, poprawia segment `projekty`/`projects` i zwraca prawdziwy 404.
+Każda strona ma `hreflang` (pl, en, x-default), canonical i wpis w sitemapie dla obu języków.
+Przełącznik PL / EN otwiera tę samą stronę w drugim języku (pełne przeładowanie — zmienia się `<html lang>`).
+
+### Zrzuty ekranu
+
+Pliki są w `src/assets/projects/<slug>/` (WebP, 2400 px szerokości) i są importowane statycznie w `site.ts`,
+więc `next/image` zna ich proporcje — zrzuty nigdy nie są rozciągane, a na stronach projektów są pokazywane w całości.
+
+Aby dodać ekran: wrzuć plik do folderu projektu, zaimportuj go w `site.ts` i dopisz do `screens`
+(`kind: "desktop"` — pełna szerokość, `kind: "mobile"` — ekrany telefonu wyświetlane parami).
 
 ## Architektura
 
 ```
 src/
-  config/site.ts              ← cała treść
+  config/site.ts              ← treść projektów i kontakt
+  i18n/                       ← locale, ścieżki, słownik, kontekst języka
+  proxy.ts                    ← mapowanie adresów PL/EN + statusy 404
+  assets/projects/            ← zrzuty ekranu
   app/
-    layout.tsx                ← fonty, SEO, skrypt intro (przed pierwszym renderem)
-    page.tsx                  ← strona główna
-    projekty/[slug]/          ← case study + obraz Open Graph
-    opengraph-image.tsx, sitemap.ts, robots.ts, icon.svg, not-found.tsx
-    globals.css               ← tokeny, typografia, choreografia intro (CSS)
-  proxy.ts                    ← prawdziwy 404 dla nieznanych projektów
+    [lang]/layout.tsx         ← root layout per język: fonty, SEO, hreflang, skrypt intro
+    [lang]/page.tsx           ← strona główna
+    [lang]/projekty/[slug]/   ← case study + obraz Open Graph
+    [lang]/not-found.tsx      ← lokalizowany 404
+    sitemap.ts, robots.ts, icon.svg, globals.css
   components/
     home/                     ← intro, hero, showcase, indeks, studio, usługi, proces, kontakt
     project/                  ← hero case study, ProjectVisual (zrzut lub placeholder)
-    art/project-art.tsx       ← tymczasowe kompozycje SVG z wariantami kadrowania
-    layout/                   ← nagłówek (menu jako <dialog>), stopka
+    layout/                   ← nagłówek (menu <dialog> + przełącznik języka), stopka
     ui/reveal.tsx             ← reveal, który nigdy nie zostawia ukrytej treści
-  lib/                        ← hooki (SSR-safe media queries), utils, OG
 ```
 
 ### Ruch
 
-- **Intro** — czysty CSS uruchamiany od pierwszej klatki, zanim React się zhydratuje (brak migania i przesunięć).
-  Skrypt w `<head>` wybiera tryb: `play` (pierwsza wizyta w sesji), `lite` (kolejne wizyty, linki z `#`,
-  słabsze urządzenia mobilne), `off` (`prefers-reduced-motion`). Overlay nigdy nie blokuje kliknięć.
-- **Showcase** — Motion `useScroll`/`useTransform` na naturalnym przewijaniu, bez przypinania sekcji.
-  Pełna choreografia tylko na ekranach ≥1024 px bez reduced motion; ten sam DOM na każdym ekranie.
-- **Indeks** — podgląd na sprężynach podąża za kursorem (tylko precyzyjne wskaźniki); dotyk = statyczne miniatury.
+- **Intro** — czysty CSS uruchamiany od pierwszej klatki (na `/` i `/en`). Skrypt w `<head>` wybiera tryb:
+  `play` (pierwsza wizyta w sesji), `lite` (kolejne wizyty, linki z `#`, słabsze urządzenia), `off` (reduced motion).
+- **Showcase** — Motion `useScroll`/`useTransform` na naturalnym przewijaniu, bez przypinania sekcji;
+  pełna choreografia tylko na ekranach ≥1024 px bez reduced motion.
+- **Indeks** — podgląd podąża za kursorem (tylko precyzyjne wskaźniki); dotyk = statyczne miniatury.
 
 ## Publikacja
 
@@ -71,8 +77,8 @@ src/
 
 1. Wypchnij repozytorium na GitHub.
 2. Na vercel.com → **Add New → Project** → zaimportuj repozytorium (ustawienia domyślne).
-3. Po podpięciu własnej domeny ustaw zmienną `NEXT_PUBLIC_SITE_URL=https://twojadomena.pl`
-   (canonical, sitemap, Open Graph). Bez niej użyta zostanie domena produkcyjna Vercela.
+3. Opcjonalnie ustaw `NEXT_PUBLIC_SITE_URL` (np. po podpięciu własnej domeny) — używane w canonical, hreflang,
+   sitemapie i Open Graph. Bez niej użyta zostanie automatycznie domena produkcyjna Vercela.
 
 ### Własny serwer (Node 20+)
 

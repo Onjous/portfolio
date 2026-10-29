@@ -5,11 +5,13 @@ import { motion, useScroll, useTransform, type MotionValue } from "motion/react"
 import { useRef } from "react";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { projects, site } from "@/config/site";
+import { useLang } from "@/i18n/lang-context";
 import { useMotionOK } from "@/lib/hooks";
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
   const reduce = !useMotionOK();
+  const { t } = useLang();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const x1 = useTransform(scrollYProgress, [0, 1], ["0%", "-14%"]);
   const x2 = useTransform(scrollYProgress, [0, 1], ["0%", "9%"]);
@@ -17,18 +19,18 @@ export function Hero() {
   const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0.2]);
 
   return (
-    <section ref={ref} id="start" aria-labelledby="hero-title" className="px-gutter relative flex min-h-svh flex-col pt-24 pb-6 md:pt-28">
+    <section ref={ref} id="start" aria-labelledby="hero-title" className="px-gutter relative flex min-h-svh flex-col overflow-x-clip pt-24 pb-6 md:pt-28">
       <Marks />
 
       <div data-hero-fade className="grid grid-cols-2 gap-6 md:grid-cols-12" style={{ "--d": "0.05s" } as React.CSSProperties}>
         <p className="eyebrow text-mute md:col-span-3">
-          <span className="text-lime">●</span>&nbsp; Niezależne studio
+          <span className="text-lime">●</span>&nbsp; {t.hero.eyebrow}
         </p>
         <p className="eyebrow hidden text-mute md:col-span-5 md:col-start-5 md:block">
-          Projektowanie i development stron internetowych — od pierwszej rozmowy po publikację.
+          {t.hero.intro}
         </p>
         <p className="eyebrow text-right text-mute md:col-span-3 md:col-start-10">
-          Projekty 01—{String(projects.length).padStart(2, "0")}
+          {t.hero.projects} 01—{String(projects.length).padStart(2, "0")}
         </p>
       </div>
 
@@ -53,21 +55,21 @@ export function Hero() {
           style={{ "--d": "0.15s" } as React.CSSProperties}
         >
           <p className="text-lg leading-snug text-bone/85 text-balance md:text-xl">
-            Projektuję i tworzę strony internetowe, które wyróżniają marki.
+            {t.hero.lead}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="#projekty"
               className="group inline-flex items-center gap-2 rounded-full bg-lime px-5 py-3 text-sm font-medium text-ink transition-transform duration-300 hover:-translate-y-0.5"
             >
-              Zobacz projekty
+              {t.hero.ctaWork}
               <ArrowDown className="size-4 transition-transform duration-300 group-hover:translate-y-0.5" aria-hidden="true" />
             </Link>
             <Link
               href="#kontakt"
               className="group inline-flex items-center gap-2 rounded-full border border-bone/25 px-5 py-3 text-sm transition-colors duration-300 hover:border-bone hover:bg-bone hover:text-ink"
             >
-              Porozmawiajmy
+              {t.hero.ctaTalk}
               <ArrowUpRight className="size-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
           </div>
@@ -79,7 +81,7 @@ export function Hero() {
           <span className="relative block h-8 w-px overflow-hidden bg-line" aria-hidden="true">
             <span className="scroll-cue absolute inset-0 bg-lime" />
           </span>
-          Przewiń
+          {t.hero.scroll}
         </a>
         <p className="eyebrow hidden text-mute sm:block">{site.tagline}</p>
         <p className="eyebrow text-mute">{site.name}</p>

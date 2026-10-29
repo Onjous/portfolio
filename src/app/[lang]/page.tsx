@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { Intro } from "@/components/home/intro";
 import { Hero } from "@/components/home/hero";
 import { Showcase } from "@/components/home/showcase";
@@ -7,18 +8,23 @@ import { Services } from "@/components/home/services";
 import { Process } from "@/components/home/process";
 import { Contact } from "@/components/home/contact";
 import { site } from "@/config/site";
+import { hasLocale, homePath } from "@/i18n/config";
+import { dictionary } from "@/i18n/dictionary";
 
-export default function Home() {
+export default async function Home({ params }: PageProps<"/[lang]">) {
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: site.name,
     slogan: site.tagline,
-    description: site.description,
-    url: site.url,
+    description: dictionary[lang].meta.description,
+    url: new URL(homePath(lang), site.url).toString(),
     founder: { "@type": "Person", name: site.founder },
-    ...(site.email ? { email: site.email } : {}),
-    ...(site.socials.length ? { sameAs: site.socials.map((s) => s.href) } : {}),
+    email: site.email,
+    sameAs: site.socials.map((s) => s.href),
   };
 
   return (
@@ -28,8 +34,8 @@ export default function Home() {
       <Hero />
       <Showcase />
       <ProjectIndex />
-      <About />
-      <Services />
+      <About lang={lang} />
+      <Services lang={lang} />
       <Process />
       <Contact />
     </>

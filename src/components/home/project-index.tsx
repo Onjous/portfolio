@@ -13,10 +13,12 @@ import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/config/site";
 import { ProjectVisual } from "@/components/project/project-visual";
 import { Reveal } from "@/components/ui/reveal";
+import { projectPath } from "@/i18n/config";
+import { useLang } from "@/i18n/lang-context";
 import { EASE_OUT_EXPO, useMotionOK } from "@/lib/hooks";
 
-const PREVIEW_W = 380;
-const PREVIEW_H = 260;
+const PREVIEW_W = 432;
+const PREVIEW_H = 240;
 /** Keeps the preview above the cursor so the hovered name stays readable. */
 const LIFT = PREVIEW_H / 2 + 36;
 
@@ -29,6 +31,7 @@ const LIFT = PREVIEW_H / 2 + 36;
  */
 export function ProjectIndex() {
   const reduce = !useMotionOK();
+  const { lang, t } = useLang();
   const [active, setActive] = useState<number | null>(null);
   const [lastActive, setLastActive] = useState(0);
 
@@ -39,7 +42,7 @@ export function ProjectIndex() {
   const y = useSpring(my, spring);
   const vx = useVelocity(x);
   const rotate = useSpring(useTransform(vx, [-2400, 0, 2400], [-9, 0, 9], { clamp: true }), { stiffness: 200, damping: 25 });
-  const innerX = useTransform(x, [0, 1920], [16, -16]);
+  const innerX = useTransform(x, [0, 1920], [10, -10]);
   const listRef = useRef<HTMLUListElement>(null);
 
   const show = (i: number) => {
@@ -60,9 +63,9 @@ export function ProjectIndex() {
   return (
     <section id="indeks" aria-labelledby="indeks-title" className="px-gutter relative py-28 md:py-40">
       <div className="mb-12 grid grid-cols-1 gap-6 md:mb-16 md:grid-cols-12">
-        <p className="eyebrow text-mute md:col-span-3">(02) Indeks</p>
+        <p className="eyebrow text-mute md:col-span-3">{t.index.label}</p>
         <h2 id="indeks-title" className="display text-4xl md:col-span-9 md:text-6xl">
-          Indeks <span className="serif-italic uppercase">case study</span>
+          {t.index.title[0]} <span className="serif-italic uppercase">{t.index.title[1]}</span>
         </h2>
       </div>
 
@@ -77,7 +80,7 @@ export function ProjectIndex() {
         {projects.map((project, i) => (
           <li key={project.slug} className="border-b border-line">
             <Link
-              href={`/projekty/${project.slug}`}
+              href={projectPath(lang, project.slug)}
               className={`group relative grid grid-cols-12 items-center gap-x-4 py-6 transition-opacity duration-500 md:py-8 ${
                 active !== null && active !== i ? "hover-fine:opacity-30" : ""
               }`}
@@ -93,8 +96,8 @@ export function ProjectIndex() {
               }}
               onBlur={() => setActive(null)}
             >
-              <div className="col-span-12 mb-5 aspect-[16/10] overflow-hidden rounded-[3px] hover-fine:hidden">
-                <ProjectVisual project={project} crop="cover" sizes="100vw" />
+              <div className="col-span-12 mb-5 aspect-[9/5] overflow-hidden rounded-[3px] hover-fine:hidden">
+                <ProjectVisual project={project} lang={lang} crop="cover" sizes="100vw" decorative />
               </div>
               <span className="eyebrow col-span-2 text-mute transition-colors group-hover:text-lime group-focus-visible:text-lime md:col-span-1">
                 ({project.index})
@@ -115,7 +118,7 @@ export function ProjectIndex() {
       </ul>
 
       <Reveal className="mt-10 max-w-xl text-sm text-mute">
-        <p>Wszystkie projekty są koncepcyjne / demonstracyjne — powstały jako autorskie studia, nie na zlecenie klientów.</p>
+        <p>{t.index.note}</p>
       </Reveal>
 
       {/* Floating preview — precise pointers only */}
@@ -142,11 +145,11 @@ export function ProjectIndex() {
         >
           {projects.map((project) => (
             <div key={project.slug} className="relative overflow-hidden" style={{ height: PREVIEW_H }}>
-              <motion.div className="absolute -inset-x-8 inset-y-0" style={reduce ? undefined : { x: innerX }}>
-                <ProjectVisual project={project} crop="cover" sizes={`${PREVIEW_W}px`} tag={false} />
+              <motion.div className="absolute inset-0 scale-[1.06]" style={reduce ? undefined : { x: innerX }}>
+                <ProjectVisual project={project} lang={lang} crop="cover" sizes={`${PREVIEW_W}px`} tag={false} decorative />
               </motion.div>
               <span className="eyebrow absolute bottom-3 left-3 rounded-full bg-black/50 px-2.5 py-1 text-[0.6rem] text-white/80">
-                {project.cover.src ? project.category : "Wizualizacja tymczasowa"}
+                {project.category}
               </span>
             </div>
           ))}

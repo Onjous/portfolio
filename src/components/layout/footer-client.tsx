@@ -13,7 +13,7 @@ export function CurrentYear() {
   return <span>{year}</span>;
 }
 
-export function BackToTop() {
+export function BackToTop({ label }: { label: string }) {
   return (
     <button
       type="button"
@@ -24,7 +24,7 @@ export function BackToTop() {
       }}
       className="eyebrow group flex items-center gap-2 text-mute transition-colors hover:text-bone"
     >
-      Do góry
+      {label}
       <ArrowUp className="size-3.5 transition-transform group-hover:-translate-y-0.5" aria-hidden="true" />
     </button>
   );

@@ -3,48 +3,23 @@
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Reveal, RevealLines } from "@/components/ui/reveal";
+import { useLang } from "@/i18n/lang-context";
 import { useMotionOK } from "@/lib/hooks";
-
-const steps = [
-  {
-    index: "01",
-    title: "Rozmowa",
-    text: "Poznaję Twoją firmę, cele i odbiorców. Ustalamy zakres, termin i budżet — konkretnie i bez zobowiązań.",
-    outcome: "Jasny plan",
-  },
-  {
-    index: "02",
-    title: "Projekt",
-    text: "Przygotowuję projekt wizualny. Widzisz, jak będzie wyglądać strona, zanim powstanie choć linijka kodu, i wspólnie wprowadzamy poprawki.",
-    outcome: "Zatwierdzony wygląd",
-  },
-  {
-    index: "03",
-    title: "Realizacja",
-    text: "Buduję stronę: kod, animacje i wersję mobilną. Testuję ją na różnych urządzeniach i przeglądarkach.",
-    outcome: "Gotowa strona",
-  },
-  {
-    index: "04",
-    title: "Publikacja",
-    text: "Strona trafia do sieci. Pomagam z domeną i konfiguracją oraz pokazuję, jak dbać o nią po starcie.",
-    outcome: "Strona online",
-  },
-];
 
 export function Process() {
   const ref = useRef<HTMLOListElement>(null);
   const motionOK = useMotionOK();
+  const { t } = useLang();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 60%"] });
   const draw = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
     <section id="proces" aria-labelledby="proces-title" className="px-gutter border-t border-line py-28 md:py-44">
       <div className="mb-16 grid grid-cols-1 gap-8 md:mb-28 md:grid-cols-12">
-        <p className="eyebrow text-mute md:col-span-3">(05) Proces</p>
-        <RevealLines as="h2" id="proces-title" className="display text-[12vw] md:col-span-9 md:text-[7vw]" lines={["Jak", "pracujemy"]} />
+        <p className="eyebrow text-mute md:col-span-3">{t.process.label}</p>
+        <RevealLines as="h2" id="proces-title" className="display text-[12vw] md:col-span-9 md:text-[7vw]" lines={t.process.title} />
         <Reveal className="text-bone/70 md:col-span-4 md:col-start-9" delay={0.1}>
-          <p>Cztery kroki, jasne zasady i stały kontakt. Zawsze wiesz, na jakim etapie jest Twoja strona.</p>
+          <p>{t.process.intro}</p>
         </Reveal>
       </div>
 
@@ -62,12 +37,12 @@ export function Process() {
           style={motionOK ? { scaleX: draw } : undefined}
         />
 
-        {steps.map((step, i) => (
-          <li key={step.index} className="relative lg:[margin-top:var(--offset)]" style={{ "--offset": `${i * 4.5}rem` } as React.CSSProperties}>
+        {t.process.steps.map((step, i) => (
+          <li key={step.title} className="relative lg:[margin-top:var(--offset)]" style={{ "--offset": `${i * 4.5}rem` } as React.CSSProperties}>
             <span aria-hidden="true" className="absolute -left-8 top-2 size-2 -translate-x-1/2 rounded-full bg-lime lg:top-[calc(-3rem-var(--offset))] lg:left-0 lg:-translate-y-1/2 lg:translate-x-0" />
             <Reveal delay={i * 0.08}>
-              <span className="display text-outline block text-[22vw] leading-[0.8] lg:text-[8vw]">{step.index}</span>
-              <h3 className="display -mt-[0.3em] text-4xl lg:text-[2.6vw]">{step.title}</h3>
+              <span className="display text-outline block text-[22vw] leading-[0.8] lg:text-[8vw]">0{i + 1}</span>
+              <h3 className="display -mt-[0.3em] text-[clamp(1.5rem,7.6vw,2.25rem)] lg:text-[2.2vw]">{step.title}</h3>
               <p className="mt-5 max-w-sm text-bone/75">{step.text}</p>
               <p className="eyebrow mt-6 text-lime">→ {step.outcome}</p>
             </Reveal>
