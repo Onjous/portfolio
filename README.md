@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MIKO STUDIO
 
-## Getting Started
+Portfolio niezależnego studia projektowego — Digital Design & Development.
 
-First, run the development server:
+Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Motion for React · Lucide.
+
+## Uruchomienie
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # build produkcyjny
+npm run start    # serwer produkcyjny
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Edycja treści — jeden plik
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Wszystko, co edytowalne, jest w **`src/config/site.ts`**:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Pole | Co robi |
+| --- | --- |
+| `site.email` | Adres e-mail. **Puste = brak linku w sekcji kontaktu.** Uzupełnij przed publikacją. |
+| `site.socials` | Lista `{ label, href }`. Pusta = nic się nie wyświetla. |
+| `projects[]` | Dane projektów: nazwa, kategoria, koncept, kierunek, paleta, ekrany. |
+| `projects[].liveUrl` | Link do wersji live. Puste = „Wersja live — wkrótce” (bez martwego linku). |
+| `projects[].cover.src` | Zrzut ekranu okładki, np. `/projects/brut/cover.jpg`. |
+| `projects[].screens[].src` | Zrzuty ekranów na podstronie projektu (`kind: "desktop"` lub `"mobile"`). |
 
-## Learn More
+### Podmiana wizualizacji tymczasowych na zrzuty ekranu
 
-To learn more about Next.js, take a look at the following resources:
+Dopóki projekt nie ma `src`, strona pokazuje abstrakcyjną kompozycję SVG oznaczoną
+etykietą **„Wizualizacja tymczasowa”** / **„Miejsce na zrzut ekranu”**. To nie są fałszywe screenshoty.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Wrzuć pliki do `public/projects/<slug>/` (zalecane: JPG/WebP, okładka 2400×1500, ekrany desktop 2400×1500, mobile 1080×1920).
+2. Ustaw ścieżki w `site.ts`, np. `cover: { src: "/projects/brut/cover.jpg", alt: "…" }`.
+3. Obrazy są automatycznie optymalizowane przez `next/image`; etykiety placeholderów znikają.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architektura
 
-## Deploy on Vercel
+```
+src/
+  config/site.ts              ← cała treść
+  app/
+    layout.tsx                ← fonty, SEO, skrypt intro (przed pierwszym renderem)
+    page.tsx                  ← strona główna
+    projekty/[slug]/          ← case study + obraz Open Graph
+    opengraph-image.tsx, sitemap.ts, robots.ts, icon.svg, not-found.tsx
+    globals.css               ← tokeny, typografia, choreografia intro (CSS)
+  proxy.ts                    ← prawdziwy 404 dla nieznanych projektów
+  components/
+    home/                     ← intro, hero, showcase, indeks, studio, usługi, proces, kontakt
+    project/                  ← hero case study, ProjectVisual (zrzut lub placeholder)
+    art/project-art.tsx       ← tymczasowe kompozycje SVG z wariantami kadrowania
+    layout/                   ← nagłówek (menu jako <dialog>), stopka
+    ui/reveal.tsx             ← reveal, który nigdy nie zostawia ukrytej treści
+  lib/                        ← hooki (SSR-safe media queries), utils, OG
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Ruch
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Intro** — czysty CSS uruchamiany od pierwszej klatki, zanim React się zhydratuje (brak migania i przesunięć).
+  Skrypt w `<head>` wybiera tryb: `play` (pierwsza wizyta w sesji), `lite` (kolejne wizyty, linki z `#`,
+  słabsze urządzenia mobilne), `off` (`prefers-reduced-motion`). Overlay nigdy nie blokuje kliknięć.
+- **Showcase** — Motion `useScroll`/`useTransform` na naturalnym przewijaniu, bez przypinania sekcji.
+  Pełna choreografia tylko na ekranach ≥1024 px bez reduced motion; ten sam DOM na każdym ekranie.
+- **Indeks** — podgląd na sprężynach podąża za kursorem (tylko precyzyjne wskaźniki); dotyk = statyczne miniatury.
+
+## Publikacja
+
+### Vercel (zalecane)
+
+1. Wypchnij repozytorium na GitHub.
+2. Na vercel.com → **Add New → Project** → zaimportuj repozytorium (ustawienia domyślne).
+3. Po podpięciu własnej domeny ustaw zmienną `NEXT_PUBLIC_SITE_URL=https://twojadomena.pl`
+   (canonical, sitemap, Open Graph). Bez niej użyta zostanie domena produkcyjna Vercela.
+
+### Własny serwer (Node 20+)
+
+```bash
+npm ci && npm run build
+NEXT_PUBLIC_SITE_URL=https://twojadomena.pl npm run start   # port 3000, za reverse proxy (np. Nginx)
+```
+
+Strona wymaga serwera Node (Proxy dla statusów 404 i optymalizacja obrazów), więc nie jest eksportem statycznym.
